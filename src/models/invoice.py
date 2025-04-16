@@ -3,6 +3,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
+from src.models.card import Card, MaskedCard
 from src.models.enums import Status
 
 class InvoiceRequest(BaseModel):
@@ -12,6 +13,7 @@ class InvoiceRequest(BaseModel):
     job_description: str
     customer_id: int
     amount: Union[str, float]
+    card: Optional[Card] = None
     
     @field_validator("amount", mode="before")
     def round_amount(cls, v):
@@ -27,4 +29,10 @@ class InvoiceResponse(InvoiceRequest):
     customer_name: Optional[str] = None
     customer_email:  Optional[str] = None
     invoice_status: Status = Status.PENDING
-    
+    card: Optional[MaskedCard] = None # Optional
+
+    @property
+    def masked_card(self) -> Optional[str]:
+        if not self.card or not self.card.number:
+            return None
+        return f"**** **** **** {self.card.number[-4:]}"
